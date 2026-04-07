@@ -5,31 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prosjekt Overskudd</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0A0A0F" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <meta name="theme-color" content="#FF6B35" />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0A0A0F; font-family: 'Barlow', sans-serif; color: #F0EDE6; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.3); border-radius: 2px; }
+    body { background: #0A0A0F; font-family: 'Barlow', sans-serif; color: #F0EDE6; min-height: 100vh; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);} }
     @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.6;} }
     @keyframes spin { from{transform:rotate(0deg);}to{transform:rotate(360deg);} }
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,107,53,0.3);border-radius:2px;}
+    .fade { animation: fadeIn 0.25s ease; }
+    .hidden { display: none !important; }
+    button { font-family: 'Barlow Condensed', sans-serif; cursor: pointer; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-const { useState, useEffect, useRef } = React;
-const { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid } = Recharts;
-
+<div id="app"></div>
+<script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXSAbmAkhE1bq4bz5LbB3FqjMwOICnhkLgz-VviLbvUmIjRzPTFKV1ELP-kQ4lKnExYg/exec";
 
 const manuelleData = [
@@ -40,11 +33,44 @@ const manuelleData = [
   { dato: "14/3", vekt: 125.7, kilde: "manuell" },
 ];
 
+const plan = {
+  kosthold: [
+    { icon: "🔥", tittel: "TDEE-estimat", info: "~2800–3200 kcal/dag ved moderat aktivitet" },
+    { icon: "📉", tittel: "Kaloriunderskudd", info: "400–600 kcal/dag → ca. 0,5 kg tap per uke" },
+    { icon: "💪", tittel: "Proteinmål", info: "Minst 150–160g protein daglig – bevarer muskelmasse og metter godt" },
+    { icon: "📱", tittel: "Logg maten", info: "Bruk Cronometer i 1–2 uker for å kartlegge utgangspunktet" },
+  ],
+  øvelser: [
+    { nr: "01", navn: "EKSENTRISKE ARMHEVINGER", kategori: "Oppvarming / Styrke", sett: "2 sett × 5 reps", instruksjon: "Senk deg så sakte du klarer (3–5 sek). Hold kroppen stiv som en planke – ta med rumpa ned!", tips: "Bruk knærne eller sofakanten for bedre kontroll.", farge: "#FF6B35" },
+    { nr: "02", navn: "DIPS MOT SOFA", kategori: "Triceps / Overkropp", sett: "4 sett × 12 reps", instruksjon: "90° i albuen, hold ryggen nær kanten. Bøyde knær for kontroll – press kraftig opp.", farge: "#FF6B35" },
+    { nr: "03", navn: "TRX-ROING", kategori: "Rygg / Trekk", sett: "4 sett × 12 reps", instruksjon: "Fest TRX-stropen over en lukket dør. Hold i håndtakene, len deg bakover – dra deg opp ved å trekke albuene bakover.", tips: "Utstyr: TRX-stropen (svart/oransje).", farge: "#00C9A7" },
+    { nr: "04", navn: "KNEBØY", kategori: "Bein / Sete", sett: "3 sett × 10 reps", instruksjon: "Rett rygg, tyngden på hælene.", tips: "Sjekk at vekten er jevnt fordelt på begge hæler.", farge: "#FF6B35" },
+    { nr: "05", navn: "SETELØFT / GLUTE BRIDGE", kategori: "Sete / Kjerne", sett: "3 sett × 12 reps", instruksjon: "Ligg på ryggen, løft hoftene, skvis rumpa på toppen.", tips: "Skvis begge sider av rompa likt – ikke len deg til én side.", farge: "#FF6B35" },
+    { nr: "05b", navn: "CLAMSHELL", kategori: "Sete / Hofte — NY", sett: "3 sett × 15 reps (per side)", instruksjon: "Legg deg på siden med knærne bøyd ca. 45 grader. Hold føttene presset sammen. Løft det øverste kneet opp – hoften skal ikke bevege seg.", tips: "Utstyr: gul loop-strikk rundt lårene.", farge: "#00C9A7", ny: true },
+    { nr: "06", navn: "FUGLEHUNDEN", kategori: "Kjerne / Stabilitet", sett: "4 sett × 12 reps", instruksjon: "Diagonalt løft av arm og bein. Hold ryggen nøytral.", farge: "#FF6B35" },
+    { nr: "07", navn: "DEAD BUG", kategori: "Dyp kjerne", sett: "3 sett × 8 reps (per side)", instruksjon: "Ligg på ryggen, armer rett opp. Senk motsatt arm og bein mot gulvet – hold korsryggen presset ned.", farge: "#00C9A7" },
+    { nr: "08", navn: "PLANKE", kategori: "Kjerne", sett: "3 sett × 25 sek hold", instruksjon: "Underarmene i gulvet, kroppen rett linje fra hode til hæl. Ikke la hoftene synke.", tips: "Øk holdetiden gradvis, 5 sek per uke.", farge: "#00C9A7", planke: true },
+    { nr: "09", navn: "KOBRAEN", kategori: "Restitusjon / Strekk", sett: "2 minutter", instruksjon: "Ligg på magen, press overkroppen opp. Kjenn strekken i mage og rygg.", farge: "#8B8B8B", kobra: true },
+  ],
+  hvile: [
+    { ikon: "🥊", tekst: "3 runder × 3 min skyggeboksing (1 min pause)" },
+    { ikon: "🚶", tekst: "20–30 min gåtur etterpå" },
+    { ikon: "👶", tekst: "Hverdagsaktivitet og lek med barna teller massivt!" },
+  ]
+};
+
+// --- State ---
+let vektData = [...manuelleData];
+let status = "laster";
+let sisteOppdatering = null;
+let aktivFane = "vekt";
+
+// --- Utils ---
 function parseAppsScriptData(rows) {
   const dagMap = {};
   for (const row of rows) {
     const datoRaw = row.dato;
-    const klokkaRaw = row.klokka;
+    const klokkaRaw = row.klokka || "";
     const vektRaw = parseFloat(String(row.vekt).replace(",", "."));
     if (isNaN(vektRaw) || vektRaw > 300) continue;
     if (!datoRaw || !datoRaw.includes(".")) continue;
@@ -70,367 +96,371 @@ function parseAppsScriptData(rows) {
     .map(d => ({ dato: d.datoLabel, vekt: d.beste, kilde: "sheets" }));
 }
 
-const plan = {
-  kosthold: [
-    { icon: "🔥", tittel: "TDEE-estimat", info: "~2800–3200 kcal/dag ved moderat aktivitet" },
-    { icon: "📉", tittel: "Kaloriunderskudd", info: "400–600 kcal/dag → ca. 0,5 kg tap per uke" },
-    { icon: "💪", tittel: "Proteinmål", info: "Minst 150–160g protein daglig – bevarer muskelmasse og metter godt" },
-    { icon: "📱", tittel: "Logg maten", info: "Bruk Cronometer i 1–2 uker for å kartlegge utgangspunktet" },
-  ],
-  styrke: {
-    dager: "MANDAG · ONSDAG · FREDAG",
-    sted: "Stuegulvet / Sofaen",
-    øvelser: [
-      { nr: "01", navn: "EKSENTRISKE ARMHEVINGER", kategori: "Oppvarming / Styrke", sett: "2 sett × 5 reps", instruksjon: "Senk deg så sakte du klarer (3–5 sek). Hold kroppen stiv som en planke – ta med rumpa ned!", tips: "Bruk knærne eller sofakanten for bedre kontroll.", farge: "#FF6B35" },
-      { nr: "02", navn: "DIPS MOT SOFA", kategori: "Triceps / Overkropp", sett: "4 sett × 12 reps", instruksjon: "90° i albuen, hold ryggen nær kanten. Bøyde knær for kontroll – press kraftig opp.", tips: null, farge: "#FF6B35" },
-      { nr: "03", navn: "TRX-ROING", kategori: "Rygg / Trekk", sett: "4 sett × 12 reps", instruksjon: "Fest TRX-stropen over en lukket dør. Hold i håndtakene, len deg bakover med strake armer – jo mer du lener deg, jo tyngre. Dra deg opp ved å trekke albuene bakover og ned langs siden. Hold kroppen som en planke hele veien.", tips: "Utstyr: TRX-stropen (svart/oransje). Juster vanskelighetsgrad ved å endre hvor mye du lener deg bakover.", farge: "#00C9A7" },
-      { nr: "04", navn: "KNEBØY", kategori: "Bein / Sete", sett: "3 sett × 10 reps", instruksjon: "Rett rygg, tyngden på hælene.", tips: "Sjekk at vekten er jevnt fordelt på begge hæler.", farge: "#FF6B35" },
-      { nr: "05", navn: "SETELØFT / GLUTE BRIDGE", kategori: "Sete / Kjerne", sett: "3 sett × 12 reps", instruksjon: "Ligg på ryggen, løft hoftene, skvis rumpa på toppen.", tips: "Skvis begge sider av rompa likt på toppen – ikke len deg til én side.", farge: "#FF6B35" },
-      { nr: "05b", navn: "CLAMSHELL", kategori: "Sete / Hofte — NY", sett: "3 sett × 15 reps (per side)", instruksjon: "Legg deg på siden med knærne bøyd ca. 45 grader. Hold føttene presset sammen hele tiden. Løft det øverste kneet opp mot taket – hoften skal ikke bevege seg. Hold ett sekund øverst, senk rolig ned. Bytt side.", tips: "Utstyr: gul loop-strikk rundt lårene rett over knærne.", farge: "#00C9A7", ny: true },
-      { nr: "06", navn: "FUGLEHUNDEN", kategori: "Kjerne / Stabilitet", sett: "4 sett × 12 reps", instruksjon: "Diagonalt løft av arm og bein. Hold ryggen nøytral.", tips: null, farge: "#FF6B35" },
-      { nr: "07", navn: "DEAD BUG", kategori: "Dyp kjerne", sett: "3 sett × 8 reps (per side)", instruksjon: "Ligg på ryggen, armer rett opp. Senk motsatt arm og bein mot gulvet – hold korsryggen presset ned.", tips: "Aktiverer det dype kjernemuskulaturen.", farge: "#00C9A7" },
-      { nr: "08", navn: "PLANKE", kategori: "Kjerne", sett: "3 sett × 25 sek hold", instruksjon: "Underarmene i gulvet, kroppen rett linje fra hode til hæl. Ikke la hoftene synke.", tips: "Øk holdetiden gradvis, 5 sek per uke.", farge: "#00C9A7", planke: true },
-      { nr: "09", navn: "KOBRAEN", kategori: "Restitusjon / Strekk", sett: "2 minutter", instruksjon: "Ligg på magen, press overkroppen opp. Kjenn strekken i mage og rygg.", tips: null, farge: "#8B8B8B", kobra: true },
-    ],
-  },
-  hvile: {
-    dager: "TIRSDAG · TORSDAG · LØRDAG · SØNDAG",
-    struktur: [
-      { ikon: "🥊", tekst: "3 runder × 3 min skyggeboksing (1 min pause)" },
-      { ikon: "🚶", tekst: "20–30 min gåtur etterpå" },
-      { ikon: "👶", tekst: "Hverdagsaktivitet og lek med barna teller massivt!" },
-    ],
-  },
-};
-
-function PlankeTimer() {
-  const SECS = 25;
-  const [sek, setSek] = useState(SECS);
-  const [aktiv, setAktiv] = useState(false);
-  const [ferdig, setFerdig] = useState(false);
-  const ref = useRef(null);
-  const start = (e) => { e.stopPropagation(); setAktiv(true); setFerdig(false); setSek(SECS); };
-  const reset = (e) => { e.stopPropagation(); clearInterval(ref.current); setAktiv(false); setFerdig(false); setSek(SECS); };
-  useEffect(() => {
-    if (!aktiv) { clearInterval(ref.current); return; }
-    ref.current = setInterval(() => setSek(p => { if (p <= 1) { clearInterval(ref.current); setAktiv(false); setFerdig(true); return 0; } return p - 1; }), 1000);
-    return () => clearInterval(ref.current);
-  }, [aktiv]);
-  const r = 36, c = 2 * Math.PI * r;
-  const farge = ferdig ? "#00C9A7" : aktiv ? "#FF6B35" : "rgba(255,255,255,0.2)";
-  return (
-    <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 16 }}>
-      <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
-        <svg width="90" height="90" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="45" cy="45" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-          <circle cx="45" cy="45" r={r} fill="none" stroke={farge} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - sek/SECS)} style={{ transition: "stroke-dashoffset 0.9s linear" }} />
-        </svg>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: ferdig ? 28 : 26, color: ferdig ? "#00C9A7" : "#F0EDE6" }}>{ferdig ? "✓" : sek}</div>
-          {!ferdig && <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, color: "rgba(240,237,230,0.35)" }}>sek</div>}
-        </div>
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.15em", color: "rgba(240,237,230,0.35)", marginBottom: 8 }}>PLANKE TIMER · 25 SEK</div>
-        {ferdig ? <div><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#00C9A7", marginBottom: 8 }}>Sett fullført! 💪</div><button onClick={reset} style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 8, padding: "7px 16px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, color: "#FF6B35", cursor: "pointer" }}>IGJEN</button></div>
-        : aktiv ? <div style={{ display: "flex", gap: 8 }}><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#FF6B35", alignSelf: "center" }}>HOLD!</div><button onClick={reset} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "7px 14px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, color: "rgba(240,237,230,0.5)", cursor: "pointer" }}>AVBRYT</button></div>
-        : <button onClick={start} style={{ background: "#FF6B35", border: "none", borderRadius: 8, padding: "8px 20px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: "#0A0A0F", cursor: "pointer" }}>START</button>}
-      </div>
-    </div>
-  );
+async function hentData() {
+  status = "laster";
+  render();
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const sheetsData = parseAppsScriptData(json);
+    if (sheetsData.length === 0) throw new Error();
+    vektData = [...manuelleData, ...sheetsData];
+    sisteOppdatering = new Date().toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
+    status = "live";
+  } catch(e) {
+    console.error("Fetch feil:", e);
+    status = "feil";
+  }
+  render();
 }
 
-function KobraTimer() {
-  const SECS = 120;
-  const [sek, setSek] = useState(SECS);
-  const [aktiv, setAktiv] = useState(false);
-  const [ferdig, setFerdig] = useState(false);
-  const ref = useRef(null);
-  const start = (e) => { e.stopPropagation(); setAktiv(true); setFerdig(false); setSek(SECS); };
-  const reset = (e) => { e.stopPropagation(); clearInterval(ref.current); setAktiv(false); setFerdig(false); setSek(SECS); };
-  useEffect(() => {
-    if (!aktiv) { clearInterval(ref.current); return; }
-    ref.current = setInterval(() => setSek(p => { if (p <= 1) { clearInterval(ref.current); setAktiv(false); setFerdig(true); return 0; } return p - 1; }), 1000);
-    return () => clearInterval(ref.current);
-  }, [aktiv]);
-  const min = Math.floor(sek/60), sec = sek%60;
-  const r = 36, c = 2 * Math.PI * r;
-  const farge = ferdig ? "#00C9A7" : aktiv ? "#8B8B8B" : "rgba(255,255,255,0.2)";
-  return (
-    <div onClick={e => e.stopPropagation()} style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 16 }}>
-      <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
-        <svg width="90" height="90" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="45" cy="45" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-          <circle cx="45" cy="45" r={r} fill="none" stroke={farge} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - sek/SECS)} style={{ transition: "stroke-dashoffset 0.9s linear" }} />
-        </svg>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: ferdig ? 28 : 22, color: ferdig ? "#00C9A7" : "#F0EDE6" }}>{ferdig ? "✓" : `${min}:${String(sec).padStart(2,"0")}`}</div>
-          {!ferdig && <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, color: "rgba(240,237,230,0.35)" }}>min</div>}
-        </div>
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.15em", color: "rgba(240,237,230,0.35)", marginBottom: 8 }}>KOBRA TIMER · 2 MIN</div>
-        {ferdig ? <div><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#00C9A7", marginBottom: 8 }}>Økt fullført! 🐍</div><button onClick={reset} style={{ background: "rgba(139,139,139,0.1)", border: "1px solid rgba(139,139,139,0.3)", borderRadius: 8, padding: "7px 16px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, color: "#8B8B8B", cursor: "pointer" }}>IGJEN</button></div>
-        : aktiv ? <div style={{ display: "flex", gap: 8 }}><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#8B8B8B", alignSelf: "center" }}>SLAPP AV...</div><button onClick={reset} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "7px 14px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, color: "rgba(240,237,230,0.5)", cursor: "pointer" }}>AVBRYT</button></div>
-        : <button onClick={start} style={{ background: "#8B8B8B", border: "none", borderRadius: 8, padding: "8px 20px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 14, color: "#0A0A0F", cursor: "pointer" }}>START</button>}
-      </div>
-    </div>
-  );
+// --- SVG Graf ---
+function lagGraf(data) {
+  if (!data.length) return "";
+  const W = 340, H = 160, PL = 30, PR = 10, PT = 10, PB = 20;
+  const vekter = data.map(d => d.vekt);
+  const minV = Math.min(...vekter) - 1;
+  const maxV = Math.max(...vekter) + 1;
+  const xStep = (W - PL - PR) / (data.length - 1);
+  const yScale = v => PT + (H - PT - PB) * (1 - (v - minV) / (maxV - minV));
+  const xScale = i => PL + i * xStep;
+  const lavest = Math.min(...vekter);
+  const lavY = yScale(lavest);
+
+  const points = data.map((d, i) => `${xScale(i)},${yScale(d.vekt)}`).join(" ");
+  const areaPoints = `${xScale(0)},${H - PB} ` + data.map((d, i) => `${xScale(i)},${yScale(d.vekt)}`).join(" ") + ` ${xScale(data.length-1)},${H - PB}`;
+
+  // X-labels: vis bare første, midtre og siste
+  const labelIdxs = [0, Math.floor(data.length/2), data.length-1];
+  const xLabels = labelIdxs.map(i => `<text x="${xScale(i)}" y="${H - 4}" text-anchor="middle" fill="rgba(240,237,230,0.3)" font-size="8" font-family="DM Mono, monospace">${data[i].dato}</text>`).join("");
+
+  const dots = data.map((d, i) => `<circle cx="${xScale(i)}" cy="${yScale(d.vekt)}" r="3" fill="${d.kilde === 'manuell' ? 'rgba(255,107,53,0.45)' : '#FF6B35'}" />`).join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <line x1="${PL}" y1="${lavY}" x2="${W-PR}" y2="${lavY}" stroke="#00C9A7" stroke-dasharray="4 4" stroke-opacity="0.4" stroke-width="1"/>
+    <polygon points="${areaPoints}" fill="url(#grad)"/>
+    <polyline points="${points}" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    ${xLabels}
+    <text x="${W-PR}" y="${lavY - 4}" text-anchor="end" fill="#00C9A7" font-size="8" font-family="DM Mono, monospace" opacity="0.7">laveste ${lavest} kg</text>
+  </svg>`;
 }
 
-function BoxeTimer() {
-  const [fase, setFase] = useState("klar");
-  const [runde, setRunde] = useState(1);
-  const [sek, setSek] = useState(180);
-  const ref = useRef(null);
-  const stopp = () => { clearInterval(ref.current); ref.current = null; };
-  const reset = () => { stopp(); setFase("klar"); setRunde(1); setSek(180); };
-  const start = () => { setFase("arbeid"); setSek(180); };
-  useEffect(() => {
-    if (fase === "klar" || fase === "ferdig") { stopp(); return; }
-    ref.current = setInterval(() => {
-      setSek(prev => {
-        if (prev <= 1) {
-          if (fase === "arbeid") { if (runde >= 3) { setFase("ferdig"); stopp(); return 0; } setFase("pause"); return 60; }
-          else { setRunde(r => r + 1); setFase("arbeid"); return 180; }
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(ref.current);
-  }, [fase, runde]);
-  const min = Math.floor(sek/60), sec = sek%60;
+// --- Timer komponent ---
+function lagTimer(id, sekunder, label, farge) {
+  return `
+  <div id="timer-${id}" style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:16px;">
+    <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+      <svg width="80" height="80" style="transform:rotate(-90deg)">
+        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+        <circle id="ring-${id}" cx="40" cy="40" r="34" fill="none" stroke="${farge}" stroke-width="5" stroke-linecap="round"
+          stroke-dasharray="${2*Math.PI*34}" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.9s linear"/>
+      </svg>
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span id="display-${id}" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#F0EDE6;">${sekunder}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(240,237,230,0.35);">sek</span>
+      </div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;color:rgba(240,237,230,0.35);margin-bottom:8px;">${label}</div>
+      <div id="btn-${id}">
+        <button onclick="startTimer('${id}',${sekunder},'${farge}')" style="background:${farge};border:none;border-radius:8px;padding:8px 20px;font-weight:800;font-size:14px;color:#0A0A0F;">START</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const timerState = {};
+function startTimer(id, total, farge) {
+  if (timerState[id]) { clearInterval(timerState[id].interval); }
+  let sek = total;
+  const ring = document.getElementById(`ring-${id}`);
+  const display = document.getElementById(`display-${id}`);
+  const btn = document.getElementById(`btn-${id}`);
+  const C = 2 * Math.PI * 34;
+  const isTid = total >= 60;
+
+  function vis(s) {
+    if (isTid) {
+      const m = Math.floor(s/60), sc = s%60;
+      display.textContent = `${m}:${String(sc).padStart(2,"0")}`;
+    } else {
+      display.textContent = s;
+    }
+    ring.style.strokeDashoffset = C * (1 - s/total);
+  }
+
+  btn.innerHTML = `<button onclick="stoppTimer('${id}')" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;color:rgba(240,237,230,0.5);">AVBRYT</button>`;
+  vis(sek);
+
+  timerState[id] = { interval: setInterval(() => {
+    sek--;
+    vis(sek);
+    if (sek <= 0) {
+      clearInterval(timerState[id].interval);
+      display.textContent = "✓";
+      display.style.color = "#00C9A7";
+      display.style.fontSize = "28px";
+      ring.style.stroke = "#00C9A7";
+      btn.innerHTML = `<div style="color:#00C9A7;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-bottom:8px;">Fullført! 💪</div><button onclick="startTimer('${id}',${total},'${farge}')" style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;padding:7px 16px;font-weight:700;font-size:13px;color:#FF6B35;">IGJEN</button>`;
+    }
+  }, 1000) };
+}
+
+function stoppTimer(id) {
+  if (timerState[id]) clearInterval(timerState[id].interval);
+  render();
+}
+
+// --- Boks-timer ---
+let boksState = { fase: "klar", runde: 1, sek: 180 };
+let boksInterval = null;
+
+function startBoks() {
+  boksState = { fase: "arbeid", runde: 1, sek: 180 };
+  clearInterval(boksInterval);
+  boksInterval = setInterval(tickBoks, 1000);
+  renderBoksTimer();
+}
+
+function avbrytBoks() {
+  clearInterval(boksInterval);
+  boksState = { fase: "klar", runde: 1, sek: 180 };
+  renderBoksTimer();
+}
+
+function tickBoks() {
+  boksState.sek--;
+  if (boksState.sek <= 0) {
+    if (boksState.fase === "arbeid") {
+      if (boksState.runde >= 3) {
+        boksState.fase = "ferdig";
+        clearInterval(boksInterval);
+      } else {
+        boksState.fase = "pause";
+        boksState.sek = 60;
+      }
+    } else if (boksState.fase === "pause") {
+      boksState.runde++;
+      boksState.fase = "arbeid";
+      boksState.sek = 180;
+    }
+  }
+  renderBoksTimer();
+}
+
+function renderBoksTimer() {
+  const el = document.getElementById("boks-timer");
+  if (!el) return;
+  const { fase, runde, sek } = boksState;
   const total = fase === "pause" ? 60 : 180;
-  const r = 70, c = 2 * Math.PI * r;
   const farge = fase === "pause" ? "#00C9A7" : fase === "ferdig" ? "#8B8B8B" : "#FF6B35";
   const label = fase === "klar" ? "KLAR" : fase === "arbeid" ? "BOKS!" : fase === "pause" ? "PAUSE" : "FERDIG!";
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 16px" }}>
-      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-        {[1,2,3].map(n => <div key={n} style={{ width: 32, height: 32, borderRadius: "50%", background: n < runde ? "#FF6B35" : n === runde && fase !== "klar" && fase !== "ferdig" ? "rgba(255,107,53,0.2)" : "rgba(255,255,255,0.05)", border: `2px solid ${n <= runde && fase !== "klar" ? "#FF6B35" : "rgba(255,255,255,0.1)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: n < runde ? "#0A0A0F" : n === runde && fase !== "klar" ? "#FF6B35" : "rgba(240,237,230,0.3)" }}>{n}</div>)}
-      </div>
-      <div style={{ position: "relative", width: 180, height: 180, marginBottom: 24 }}>
-        <svg width="180" height="180" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-          <circle cx="90" cy="90" r={r} fill="none" stroke={farge} strokeWidth="8" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={fase === "klar" ? 0 : fase === "ferdig" ? c : c * (1 - sek/total)} style={{ transition: "stroke-dashoffset 0.9s linear, stroke 0.3s ease" }} />
+  const C = 2 * Math.PI * 70;
+  const offset = fase === "klar" ? 0 : fase === "ferdig" ? C : C * (1 - sek/total);
+  const min = Math.floor(sek/60), sec = sek%60;
+  const tidTekst = fase === "ferdig" ? "🥊" : `${min}:${String(sec).padStart(2,"0")}`;
+  const runder = [1,2,3].map(n => {
+    const bg = n < runde ? "#FF6B35" : (n === runde && fase !== "klar" && fase !== "ferdig") ? "rgba(255,107,53,0.2)" : "rgba(255,255,255,0.05)";
+    const border = n <= runde && fase !== "klar" ? "#FF6B35" : "rgba(255,255,255,0.1)";
+    const color = n < runde ? "#0A0A0F" : (n === runde && fase !== "klar") ? "#FF6B35" : "rgba(240,237,230,0.3)";
+    return `<div style="width:32px;height:32px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:${color};">${n}</div>`;
+  }).join("");
+
+  let knapp = "";
+  if (fase === "klar") knapp = `<button onclick="startBoks()" style="background:#FF6B35;border:none;border-radius:12px;padding:14px 40px;font-weight:800;font-size:18px;color:#0A0A0F;">START</button>`;
+  else if (fase === "arbeid" || fase === "pause") knapp = `<button onclick="avbrytBoks()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 28px;font-weight:700;font-size:16px;color:rgba(240,237,230,0.6);">AVBRYT</button>`;
+  else knapp = `<div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:#00C9A7;margin-bottom:12px;">3 runder fullført! 💪</div><button onclick="avbrytBoks()" style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:12px;padding:12px 28px;font-weight:700;font-size:16px;color:#FF6B35;">IGJEN</button></div>`;
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:24px;justify-content:center;">${runder}</div>
+    <div style="display:flex;justify-content:center;margin-bottom:24px;">
+      <div style="position:relative;width:180px;height:180px;">
+        <svg width="180" height="180" style="transform:rotate(-90deg)">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+          <circle cx="90" cy="90" r="70" fill="none" stroke="${farge}" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="${C}" stroke-dashoffset="${offset}" style="transition:stroke-dashoffset 0.9s linear,stroke 0.3s ease"/>
         </svg>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.2em", color: farge, marginBottom: 4 }}>{label}</div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 44, color: "#F0EDE6", lineHeight: 1 }}>{fase === "ferdig" ? "🥊" : `${min}:${String(sec).padStart(2,"0")}`}</div>
-          {fase !== "klar" && fase !== "ferdig" && <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "rgba(240,237,230,0.35)", marginTop: 4 }}>RUNDE {runde} AV 3</div>}
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;color:${farge};margin-bottom:4px;">${label}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:44px;color:#F0EDE6;line-height:1;">${tidTekst}</div>
+          ${fase !== "klar" && fase !== "ferdig" ? `<div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(240,237,230,0.35);margin-top:4px;">RUNDE ${runde} AV 3</div>` : ""}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 12 }}>
-        {fase === "klar" && <button onClick={start} style={{ background: "#FF6B35", border: "none", borderRadius: 12, padding: "14px 40px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 18, color: "#0A0A0F", cursor: "pointer" }}>START</button>}
-        {(fase === "arbeid" || fase === "pause") && <button onClick={reset} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 28px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: "rgba(240,237,230,0.6)", cursor: "pointer" }}>AVBRYT</button>}
-        {fase === "ferdig" && <div style={{ textAlign: "center" }}><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 18, color: "#00C9A7", marginBottom: 12 }}>3 runder fullført! 💪</div><button onClick={reset} style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 12, padding: "12px 28px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: "#FF6B35", cursor: "pointer" }}>IGJEN</button></div>}
-      </div>
     </div>
-  );
+    <div style="display:flex;justify-content:center;">${knapp}</div>`;
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) return (
-    <div style={{ background: "#1A1A24", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 8, padding: "8px 12px" }}>
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(240,237,230,0.5)", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 18, color: "#FF6B35" }}>{payload[0].value} kg</div>
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "rgba(240,237,230,0.35)", marginTop: 2 }}>{payload[0].payload.kilde === "manuell" ? "manuelt logget" : "Tasker auto"}</div>
-    </div>
-  );
-  return null;
-};
+// --- Render ---
+function setFane(f) { aktivFane = f; render(); }
 
-function ØvelseKort({ øvelse }) {
-  const [åpen, setÅpen] = useState(false);
-  return (
-    <div onClick={() => setÅpen(!åpen)} style={{ background: åpen ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${åpen ? øvelse.farge + "60" : "rgba(255,255,255,0.08)"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer", transition: "all 0.25s ease", marginBottom: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: øvelse.farge, opacity: 0.8, minWidth: 24 }}>{øvelse.nr}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.04em", color: "#F0EDE6" }}>{øvelse.navn}</span>
-            {øvelse.ny && <span style={{ background: "#00C9A7", color: "#0A0A0F", fontSize: 9, fontWeight: 800, fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em", padding: "2px 6px", borderRadius: 4 }}>NY</span>}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 3 }}>
-            <span style={{ fontSize: 11, color: "rgba(240,237,230,0.45)", fontFamily: "'DM Mono', monospace" }}>{øvelse.kategori}</span>
-            <span style={{ fontSize: 12, color: øvelse.farge, fontWeight: 600, fontFamily: "'Barlow Condensed', sans-serif" }}>{øvelse.sett}</span>
-          </div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transform: åpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", opacity: 0.6, flexShrink: 0 }}>
-          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-      {åpen && (
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.07)", animation: "fadeIn 0.2s ease" }}>
-          <p style={{ fontSize: 13, color: "rgba(240,237,230,0.75)", lineHeight: 1.6, margin: 0 }}>{øvelse.instruksjon}</p>
-          {øvelse.tips && <p style={{ fontSize: 12, color: øvelse.farge, opacity: 0.85, marginTop: 8, marginBottom: 0, fontStyle: "italic" }}>💡 {øvelse.tips}</p>}
-          {øvelse.planke && <PlankeTimer />}
-          {øvelse.kobra && <KobraTimer />}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function App() {
-  const [fane, setFane] = useState("vekt");
-  const [vektData, setVektData] = useState(manuelleData);
-  const [status, setStatus] = useState("laster");
-  const [sisteOppdatering, setSisteOppdatering] = useState(null);
-
-  const hentData = async () => {
-    setStatus("laster");
-    try {
-      const res = await fetch(APPS_SCRIPT_URL);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      const sheetsData = parseAppsScriptData(json);
-      if (sheetsData.length === 0) throw new Error();
-      setVektData([...manuelleData, ...sheetsData]);
-      setSisteOppdatering(new Date().toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" }));
-      setStatus("live");
-    } catch {
-      setStatus("feil");
-    }
-  };
-
-  useEffect(() => { hentData(); }, []);
-
+function render() {
   const første = vektData[0]?.vekt ?? null;
-  const siste = vektData[vektData.length - 1]?.vekt ?? null;
+  const siste = vektData[vektData.length-1]?.vekt ?? null;
   const lavest = vektData.length > 0 ? Math.min(...vektData.map(d => d.vekt)) : null;
   const diff = første && siste ? første - siste : null;
   const tapVisning = diff !== null ? (diff >= 0 ? `−${diff.toFixed(1)} kg` : `+${Math.abs(diff).toFixed(1)} kg`) : "–";
   const tapFarge = diff !== null && diff >= 0 ? "#00C9A7" : "#FF3B3B";
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#0A0A0F", backgroundImage: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,107,53,0.12) 0%, transparent 60%)", paddingBottom: 48 }}>
-      <div style={{ padding: "32px 24px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.25em", color: "#FF6B35", marginBottom: 6, animation: "pulse 3s ease infinite" }}>● AKTIV PLAN</div>
-        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 38, letterSpacing: "0.04em", lineHeight: 1, color: "#F0EDE6" }}>PROSJEKT<br/>OVERSKUDD</h1>
-        <p style={{ marginTop: 8, fontSize: 13, color: "rgba(240,237,230,0.5)", fontFamily: "'DM Mono', monospace" }}>Vektnedgang · Kjernestyrke · Egenvekt</p>
-        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-          {[{ label: "500 kcal/dag", sub: "Aktivitetsmål" }, { label: "150–160g", sub: "Protein daglig" }, { label: "−400–600 kcal", sub: "Underskudd" }].map(chip => (
-            <div key={chip.label} style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.25)", borderRadius: 8, padding: "7px 12px" }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#FF6B35" }}>{chip.label}</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "rgba(240,237,230,0.45)", marginTop: 1 }}>{chip.sub}</div>
+  const faner = ["vekt","kosthold","styrke","hvile"];
+  const faneLabels = { vekt:"VEKT", kosthold:"KOSTHOLD", styrke:"STYRKE", hvile:"AKTIVE DAGER" };
+
+  const statusHTML = status === "laster"
+    ? `<div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;border:1px solid #FF6B35;border-top-color:transparent;animation:spin 0.8s linear infinite;"></div><span style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(240,237,230,0.4);">Henter fra Sheets…</span></div>`
+    : status === "live"
+    ? `<div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;background:#00C9A7;"></div><span style="font-family:'DM Mono',monospace;font-size:10px;color:#00C9A7;">Live · Vekt Auto · ${sisteOppdatering}</span></div>`
+    : `<div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:50%;background:#FF3B3B;"></div><span style="font-family:'DM Mono',monospace;font-size:10px;color:#FF3B3B;">Kan ikke nå Sheets</span></div>`;
+
+  const vektFane = `
+    <div class="fade">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        ${statusHTML}
+        <button onclick="hentData()" style="background:#FF6B35;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:14px;color:#0A0A0F;">↻ Oppdater</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+        ${[
+          { label:"START", value: første ? `${første} kg` : "–", sub:"26. feb 2026", farge:"rgba(240,237,230,0.6)" },
+          { label:"NÅ", value: siste ? `${siste} kg` : "–", sub: vektData[vektData.length-1]?.dato ?? "–", farge:"#FF6B35" },
+          { label:"LAVESTE", value: lavest ? `${lavest} kg` : "–", sub:"beste måling", farge:"#00C9A7" },
+          { label:"TOTALT TAP", value: tapVisning, sub:"siden start", farge: tapFarge },
+        ].map(s => `
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;color:rgba(240,237,230,0.35);margin-bottom:4px;">${s.label}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;color:${s.farge};">${s.value}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(240,237,230,0.35);margin-top:2px;">${s.sub}</div>
+          </div>`).join("")}
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 8px 12px;margin-bottom:16px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;color:rgba(240,237,230,0.35);margin-bottom:12px;padding-left:8px;">MORGENVEKT — FEB–APR 2026</div>
+        ${lagGraf(vektData)}
+      </div>
+      <div style="background:rgba(255,107,53,0.07);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:14px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.1em;color:#FF6B35;margin-bottom:6px;">⚠ MULIG PLATÅ</div>
+        <p style="font-size:13px;color:rgba(240,237,230,0.65);line-height:1.6;">Vekta har ligget stabilt mellom 125–126 kg. Kroppen tilpasser seg – hvis den ikke beveger seg de neste 2–3 ukene er det tid for å se på kaloriinntaket.</p>
+      </div>
+    </div>`;
+
+  const kostFane = `
+    <div class="fade">
+      <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.1em;color:#FF6B35;margin-bottom:6px;">🔴 VIKTIGST FOR VEKTTAP</div>
+        <p style="font-size:13px;color:rgba(240,237,230,0.7);line-height:1.6;">Kosthold står for ~80% av resultatene. Treningsplanen gir form og styrke – men vekta flytter seg i kjøkkenet.</p>
+      </div>
+      ${plan.kosthold.map(k => `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;">
+          <span style="font-size:22px;">${k.icon}</span>
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#F0EDE6;margin-bottom:3px;">${k.tittel}</div>
+            <div style="font-size:13px;color:rgba(240,237,230,0.6);line-height:1.5;">${k.info}</div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+
+  const styrkeFane = `
+    <div class="fade">
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;color:rgba(240,237,230,0.4);margin-bottom:4px;">TRENINGSDAGER</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#FF6B35;">MANDAG · ONSDAG · FREDAG</div>
+        <div style="font-size:12px;color:rgba(240,237,230,0.4);font-family:'DM Mono',monospace;margin-top:2px;">Sted: Stuegulvet / Sofaen</div>
+      </div>
+      ${plan.øvelser.map((ø, i) => `
+        <div onclick="toggleOvelse(${i})" id="ovelse-${i}" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;cursor:pointer;margin-bottom:8px;transition:all 0.25s ease;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:${ø.farge};opacity:0.8;min-width:24px;">${ø.nr}</span>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:0.04em;color:#F0EDE6;">${ø.navn}</span>
+                ${ø.ny ? `<span style="background:#00C9A7;color:#0A0A0F;font-size:9px;font-weight:800;font-family:'DM Mono',monospace;letter-spacing:0.1em;padding:2px 6px;border-radius:4px;">NY</span>` : ""}
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+                <span style="font-size:11px;color:rgba(240,237,230,0.45);font-family:'DM Mono',monospace;">${ø.kategori}</span>
+                <span style="font-size:12px;color:${ø.farge};font-weight:600;font-family:'Barlow Condensed',sans-serif;">${ø.sett}</span>
+              </div>
             </div>
-          ))}
+            <svg id="chevron-${i}" width="16" height="16" viewBox="0 0 16 16" fill="none" style="transition:transform 0.3s ease;opacity:0.6;flex-shrink:0;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div id="detalj-${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);">
+            <p style="font-size:13px;color:rgba(240,237,230,0.75);line-height:1.6;margin:0;">${ø.instruksjon}</p>
+            ${ø.tips ? `<p style="font-size:12px;color:${ø.farge};opacity:0.85;margin-top:8px;margin-bottom:0;font-style:italic;">💡 ${ø.tips}</p>` : ""}
+            ${ø.planke ? lagTimer(`planke-${i}`, 25, "PLANKE TIMER · 25 SEK", "#FF6B35") : ""}
+            ${ø.kobra ? lagTimer(`kobra-${i}`, 120, "KOBRA TIMER · 2 MIN", "#8B8B8B") : ""}
+          </div>
+        </div>`).join("")}
+      <p style="font-size:11px;color:rgba(240,237,230,0.3);font-family:'DM Mono',monospace;margin-top:12px;text-align:center;">Trykk på en øvelse for instruksjon</p>
+    </div>`;
+
+  const hvileFane = `
+    <div class="fade">
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;color:rgba(240,237,230,0.4);margin-bottom:4px;">AKTIVE HVILE-DAGER</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#FF6B35;">TIRSDAG · TORSDAG · LØRDAG · SØNDAG</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.1em;color:#FF6B35;margin-bottom:4px;">🥊 SKYGGEBOKSING TIMER</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(240,237,230,0.35);margin-bottom:16px;">3 runder · 3 min arbeid · 1 min pause</div>
+        <div id="boks-timer"></div>
+      </div>
+      <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.1em;color:#00C9A7;margin-bottom:10px;">ANBEFALT STRUKTUR</div>
+        ${plan.hvile.map((s, i) => `
+          <div style="display:flex;gap:12px;align-items:flex-start;${i < plan.hvile.length-1 ? 'margin-bottom:10px;' : ''}">
+            <span style="font-size:18px;">${s.ikon}</span>
+            <span style="font-size:14px;color:rgba(240,237,230,0.75);line-height:1.5;">${s.tekst}</span>
+          </div>`).join("")}
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:rgba(240,237,230,0.4);margin-bottom:6px;">KALORIESTIMAT AKTIV HVILEDAG</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#FF6B35;">400–500</div>
+        <div style="font-size:12px;color:rgba(240,237,230,0.45);font-family:'DM Mono',monospace;">aktive kalorier</div>
+      </div>
+    </div>`;
+
+  const faneInnhold = { vekt: vektFane, kosthold: kostFane, styrke: styrkeFane, hvile: hvileFane };
+
+  document.getElementById("app").innerHTML = `
+    <div style="min-height:100vh;background:#0A0A0F;background-image:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,107,53,0.12) 0%, transparent 60%);padding-bottom:48px;">
+      <div style="padding:32px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;color:#FF6B35;margin-bottom:6px;animation:pulse 3s ease infinite;">● AKTIV PLAN</div>
+        <h1 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;letter-spacing:0.04em;line-height:1;color:#F0EDE6;">PROSJEKT<br/>OVERSKUDD</h1>
+        <p style="margin-top:8px;font-size:13px;color:rgba(240,237,230,0.5);font-family:'DM Mono',monospace;">Vektnedgang · Kjernestyrke · Egenvekt</p>
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+          ${[{label:"500 kcal/dag",sub:"Aktivitetsmål"},{label:"150–160g",sub:"Protein daglig"},{label:"−400–600 kcal",sub:"Underskudd"}].map(c=>`
+          <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:8px;padding:7px 12px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#FF6B35;">${c.label}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(240,237,230,0.45);margin-top:1px;">${c.sub}</div>
+          </div>`).join("")}
         </div>
       </div>
-
-      <div style={{ display: "flex", padding: "16px 24px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", overflowX: "auto" }}>
-        {[{ id: "vekt", label: "VEKT" }, { id: "kosthold", label: "KOSTHOLD" }, { id: "styrke", label: "STYRKE" }, { id: "hvile", label: "AKTIVE DAGER" }].map(f => (
-          <button key={f.id} onClick={() => setFane(f.id)} style={{ background: "none", border: "none", borderBottom: fane === f.id ? "2px solid #FF6B35" : "2px solid transparent", color: fane === f.id ? "#FF6B35" : "rgba(240,237,230,0.4)", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.1em", padding: "10px 14px", cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap" }}>{f.label}</button>
-        ))}
+      <div style="display:flex;padding:16px 24px 0;border-bottom:1px solid rgba(255,255,255,0.06);overflow-x:auto;">
+        ${faner.map(f=>`<button onclick="setFane('${f}')" style="background:none;border:none;border-bottom:${aktivFane===f?'2px solid #FF6B35':'2px solid transparent'};color:${aktivFane===f?'#FF6B35':'rgba(240,237,230,0.4)'};font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.1em;padding:10px 14px;cursor:pointer;white-space:nowrap;">${faneLabels[f]}</button>`).join("")}
       </div>
-
-      <div style={{ padding: "24px 24px 0" }}>
-        {fane === "vekt" && (
-          <div style={{ animation: "fadeIn 0.25s ease" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {status === "laster" && <><div style={{ width: 8, height: 8, borderRadius: "50%", border: "1px solid #FF6B35", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} /><span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(240,237,230,0.4)" }}>Henter fra Sheets…</span></>}
-                {status === "live" && <><div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00C9A7" }} /><span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#00C9A7" }}>Live · Vekt Auto · {sisteOppdatering}</span></>}
-                {status === "feil" && <><div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF3B3B" }} /><span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "#FF3B3B" }}>Kan ikke nå Sheets</span></>}
-              </div>
-              <button onClick={hentData} disabled={status === "laster"} style={{ background: "#FF6B35", border: "none", borderRadius: 8, padding: "8px 16px", cursor: status === "laster" ? "default" : "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#0A0A0F", opacity: status === "laster" ? 0.5 : 1 }}>↻ Oppdater</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-              {[
-                { label: "START", value: første ? `${første} kg` : "–", sub: "26. feb 2026", farge: "rgba(240,237,230,0.6)" },
-                { label: "NÅ", value: siste ? `${siste} kg` : "–", sub: vektData[vektData.length-1]?.dato ?? "–", farge: "#FF6B35" },
-                { label: "LAVESTE", value: lavest ? `${lavest} kg` : "–", sub: "beste måling", farge: "#00C9A7" },
-                { label: "TOTALT TAP", value: tapVisning, sub: "siden start", farge: tapFarge },
-              ].map(s => (
-                <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 16px" }}>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.15em", color: "rgba(240,237,230,0.35)", marginBottom: 4 }}>{s.label}</div>
-                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 24, color: s.farge }}>{s.value}</div>
-                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "rgba(240,237,230,0.35)", marginTop: 2 }}>{s.sub}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px 8px 12px", marginBottom: 16 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.2em", color: "rgba(240,237,230,0.35)", marginBottom: 12, paddingLeft: 8 }}>MORGENVEKT — FEB–APR 2026</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={vektData} margin={{ top: 4, right: 16, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="dato" tick={{ fontFamily: "'DM Mono', monospace", fontSize: 9, fill: "rgba(240,237,230,0.3)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                  <YAxis domain={["auto","auto"]} tick={{ fontFamily: "'DM Mono', monospace", fontSize: 9, fill: "rgba(240,237,230,0.3)" }} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  {lavest && <ReferenceLine y={lavest} stroke="#00C9A7" strokeDasharray="4 4" strokeOpacity={0.4} />}
-                  <Line type="monotone" dataKey="vekt" stroke="#FF6B35" strokeWidth={2.5} dot={(p) => <circle key={`${p.cx}-${p.cy}`} cx={p.cx} cy={p.cy} r={3} fill={p.payload.kilde === "manuell" ? "rgba(255,107,53,0.45)" : "#FF6B35"} />} activeDot={{ r: 5, fill: "#FF6B35" }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ background: "rgba(255,107,53,0.07)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: 14 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: "0.1em", color: "#FF6B35", marginBottom: 6 }}>⚠ MULIG PLATÅ</div>
-              <p style={{ fontSize: 13, color: "rgba(240,237,230,0.65)", lineHeight: 1.6 }}>Vekta har ligget stabilt mellom 125–126 kg de siste 2 ukene. Kroppen tilpasser seg – hvis den ikke beveger seg de neste 2–3 ukene er det tid for å se på kaloriinntaket.</p>
-            </div>
-          </div>
-        )}
-
-        {fane === "kosthold" && (
-          <div style={{ animation: "fadeIn 0.25s ease" }}>
-            <div style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.1em", color: "#FF6B35", marginBottom: 6 }}>🔴 VIKTIGST FOR VEKTTAP</div>
-              <p style={{ fontSize: 13, color: "rgba(240,237,230,0.7)", lineHeight: 1.6 }}>Kosthold står for ~80% av resultatene. Treningsplanen gir form og styrke – men vekta flytter seg i kjøkkenet.</p>
-            </div>
-            {plan.kosthold.map(k => (
-              <div key={k.tittel} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 16px", marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 22 }}>{k.icon}</span>
-                <div><div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, color: "#F0EDE6", marginBottom: 3 }}>{k.tittel}</div><div style={{ fontSize: 13, color: "rgba(240,237,230,0.6)", lineHeight: 1.5 }}>{k.info}</div></div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {fane === "styrke" && (
-          <div style={{ animation: "fadeIn 0.25s ease" }}>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.2em", color: "rgba(240,237,230,0.4)", marginBottom: 4 }}>TRENINGSDAGER</div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: "#FF6B35" }}>{plan.styrke.dager}</div>
-              <div style={{ fontSize: 12, color: "rgba(240,237,230,0.4)", fontFamily: "'DM Mono', monospace", marginTop: 2 }}>Sted: {plan.styrke.sted}</div>
-            </div>
-            {plan.styrke.øvelser.map(ø => <ØvelseKort key={ø.nr} øvelse={ø} />)}
-            <p style={{ fontSize: 11, color: "rgba(240,237,230,0.3)", fontFamily: "'DM Mono', monospace", marginTop: 12, textAlign: "center" }}>Trykk på en øvelse for instruksjon</p>
-          </div>
-        )}
-
-        {fane === "hvile" && (
-          <div style={{ animation: "fadeIn 0.25s ease" }}>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.2em", color: "rgba(240,237,230,0.4)", marginBottom: 4 }}>AKTIVE HVILE-DAGER</div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: "#FF6B35" }}>{plan.hvile.dager}</div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.1em", color: "#FF6B35", marginBottom: 4 }}>🥊 SKYGGEBOKSING TIMER</div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(240,237,230,0.35)", marginBottom: 16 }}>3 runder · 3 min arbeid · 1 min pause</div>
-              <BoxeTimer />
-            </div>
-            <div style={{ background: "rgba(0,201,167,0.08)", border: "1px solid rgba(0,201,167,0.2)", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.1em", color: "#00C9A7", marginBottom: 10 }}>ANBEFALT STRUKTUR</div>
-              {plan.hvile.struktur.map((s, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: i < plan.hvile.struktur.length - 1 ? 10 : 0 }}>
-                  <span style={{ fontSize: 18 }}>{s.ikon}</span>
-                  <span style={{ fontSize: 14, color: "rgba(240,237,230,0.75)", lineHeight: 1.5 }}>{s.tekst}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 6 }}>KALORIESTIMAT AKTIV HVILEDAG</div>
-              <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 28, color: "#FF6B35" }}>400–500</div>
-              <div style={{ fontSize: 12, color: "rgba(240,237,230,0.45)", fontFamily: "'DM Mono', monospace" }}>aktive kalorier</div>
-              <p style={{ marginTop: 10, fontSize: 13, color: "rgba(240,237,230,0.6)", lineHeight: 1.6 }}>Skyggeboksing er lavintensivt nok til at kroppen restituerer, men effektivt nok til å nå kalorimålet.</p>
-            </div>
-          </div>
-        )}
+      <div style="padding:24px 24px 0;">
+        ${faneInnhold[aktivFane]}
       </div>
-    </div>
-  );
+    </div>`;
+
+  if (aktivFane === "hvile") renderBoksTimer();
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
-  </script>
+function toggleOvelse(i) {
+  const detalj = document.getElementById(`detalj-${i}`);
+  const chevron = document.getElementById(`chevron-${i}`);
+  const ovelse = document.getElementById(`ovelse-${i}`);
+  const erÅpen = detalj.style.display !== "none";
+  detalj.style.display = erÅpen ? "none" : "block";
+  chevron.style.transform = erÅpen ? "rotate(0deg)" : "rotate(180deg)";
+  ovelse.style.background = erÅpen ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)";
+}
+
+// Start
+hentData();
+</script>
 </body>
 </html>
