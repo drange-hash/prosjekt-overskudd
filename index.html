@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prosjekt Overskudd</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d1a;
+      color: #f0ede6;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #1a1a2e; }
+    ::-webkit-scrollbar-thumb { background: #FF6B35; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const {
+      LineChart, Line, XAxis, YAxis, Tooltip,
+      ReferenceLine, ResponsiveContainer, CartesianGrid
+    } = Recharts;
+
+    const { useState, useEffect, useRef } = React;
+
+    // ── DATA ──────────────────────────────────────────────────────────────
+    const vektData = [
+      { dato: "26/2",  vekt: 130.1, kilde: "manuell" },
+      { dato: "27/2",  vekt: 128.7, kilde: "manuell" },
+      { dato: "2/3",   vekt: 126.6, kilde: "manuell" },
+      { dato: "5/3",   vekt: 126.7, kilde: "manuell" },
+      { dato: "14/3",  vekt: 125.7, kilde: "manuell" },
+      { dato: "18/3",  vekt: 126.9, kilde: "auto" },
+      { dato: "20/3",  vekt: 125.9, kilde: "auto" },
+      { dato: "22/3",  vekt: 125.5, kilde: "auto" },
+      { dato: "23/3",  vekt: 126.2, kilde: "auto" },
+      { dato: "27/3",  vekt: 125.9, kilde: "auto" },
+      { dato: "28/3",  vekt: 125.4, kilde: "auto" },
+      { dato: "2/4",   vekt: 125.6, kilde: "auto" },
+      { dato: "4/4",   vekt: 126.3, kilde: "manuell" },
+    ];
+
+    const første = vektData[0].vekt;
+    const siste  = vektData[vektData.length - 1].vekt;
+    const lavest = Math.min(...vektData.map(d => d.vekt));
+    const diff   = første - siste;
+    const tapVisning = diff >= 0
+      ? `−${diff.toFixed(1)} kg`
+      : `+${Math.abs(diff).toFixed(1)} kg`;
+    const tapFarge = diff >= 0 ? "#00C9A7" : "#FF3B3B";
+
+    const plan = {
+      kosthold: [
+        { ikon: "🚨", tittel: "TDEE-estimat",       info: "~2800–3200 kcal/dag ved moderat aktivitet" },
+        { ikon: "📉", tittel: "Kaloriunderskudd",   info: "400–600 kcal/dag → ca. 0,5 kg tap per uke" },
+        { ikon: "💪", tittel: "Proteinmål",         info: "Minst 150–160g protein daglig – bevarer muskelmasse og metter godt" },
+        { ikon: "📱", tittel: "Logg maten",         info: "Bruk Cronometer i 1–2 uker for å kartlegge utgangspunktet" },
+      ],
+      styrke: {
+        dager: "MANDAG · ONSDAG · FREDAG",
+        sted:  "Stuegulvet / Sofaen",
+        øvelser: [
+          { nr: "01", navn: "EKSENTRISKE ARMHEVINGER", kategori: "Oppvarming / Styrke",    sett: "2 sett × 5–8 reps",   instruksjon: "Senk deg så sakte du klarer (3–5 sek). Hold kroppen stiv som en planke – ta med rumpa ned!", tips: "Bruk knærne eller sofakanten for bedre kontroll.", farge: "#FF6B35" },
+          { nr: "02", navn: "DIPS MOT SOFA",          kategori: "Triceps / Overkropp",    sett: "4 sett × 12 reps",    instruksjon: "90° i albuen, hold ryggen nær kanten. Bøyde knær for kontroll – press kraftig opp.", tips: null, farge: "#FF6B35" },
+          { nr: "03", navn: "DØRKARMSTØING",          kategori: "Rygg / Trekk",           sett: "4 sett × 12 reps",    instruksjon: "Hold tak i dørkarmene med begge hender, lén deg inn mot karmene.", tips: "Viktig balanse mot dips og armhevinger – unngår skulder-/ryggproblemer over tid.", farge: "#00C9A7", ny: false },
+          { nr: "04", navn: "KNEBØY",                 kategori: "Bein / Sete",            sett: "3 sett × 12–15 reps", instruksjon: "Rett rygg, tyngden på hælene.", tips: "Sjekk at vekten er jevnt fordelt på begge hæler.", farge: "#FF6B35" },
+          { nr: "05", navn: "SETELØFT / GLUTE BRIDGE",kategori: "Sete / Kjerne",          sett: "3 sett × 12–15 reps", instruksjon: "Ligg på ryggen, løft hoften, skvis rumpa på toppen.", tips: "Skvis begge sider av rompa likt på toppen – ikke len deg til én side.", farge: "#FF6B35" },
+          { nr: "06", navn: "FUGLEHUNDEN",            kategori: "Kjerne / Stabilitet",    sett: "4 sett × 12 reps",    instruksjon: "Diagonalt løft av arm og bein. Hold ryggen nøytral.", tips: null, farge: "#FF6B35" },
+          { nr: "07", navn: "DEAD BUG",               kategori: "Dyp kjerne",             sett: "3 sett × 8 reps (per side)", instruksjon: "Ligg på ryggen, armer rett opp. Senk motsatt arm og bein mot gulvet – hold korsryggen presset ned.", tips: "Aktiverer det dype kjernemuskulaturen – det som gir ekte stabilitet.", farge: "#00C9A7", ny: false },
+          { nr: "08", navn: "PLANKE",                 kategori: "Kjerne",                 sett: "3 sett × 20–30 sek hold", instruksjon: "Underarmene i gulvet, kroppen rett linje fra hode til hæl. Ikke la hoften synke.", tips: "Øk holdetiden gradvis, 5 sek per uke.", farge: "#00C9A7", ny: false },
+          { nr: "09", navn: "KOBRAN",                 kategori: "Restitusjon / Strekk",   sett: "2–3 minutter",         instruksjon: "Ligg på magen, press overkroppen opp. Kjenn strekken i mage og rygg.", tips: null, farge: "#8B8B8B" },
+        ],
+      },
+      hvile: {
+        dager: "TIRSDAG · TORSDAG · LØRDAG · SØNDAG",
+        struktur: [
+          { ikon: "🥊", tekst: "3 runder × 3 min skyggeboksing (1 min pause)" },
+          { ikon: "🚶", tekst: "20–30 min gåtur etterpå" },
+          { ikon: "👶", tekst: "Hverdagsaktivitet og lek med barna teller massivt!" },
+        ],
+      },
+    };
+
+    const WORK_SECS   = 180;
+    const REST_SECS   = 60;
+    const TOTAL_ROUNDS = 3;
+
+    // ── BOKSE-TIMER ───────────────────────────────────────────────────────
+    function BoxeTimer() {
+      const [fase,   setFase]   = useState("klar");
+      const [runde,  setRunde]  = useState(1);
+      const [sek,    setSek]    = useState(WORK_SECS);
+      const intervalRef = useRef(null);
+
+      const stopp = () => {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      };
+      const reset = () => {
+        stopp();
+        setFase("klar");
+        setRunde(1);
+        setSek(WORK_SECS);
+      };
+      const start = () => {
+        setFase("arbeid");
+        setSek(WORK_SECS);
+      };
+
+      useEffect(() => {
+        if (fase === "klar" || fase === "ferdig") { stopp(); return; }
+        intervalRef.current = setInterval(() => {
+          setSek(prev => {
+            if (prev <= 1) {
+              if (fase === "arbeid") {
+                if (runde >= TOTAL_ROUNDS) {
+                  setFase("ferdig");
+                  return 0;
+                }
+                setFase("pause");
+                return REST_SECS;
+              } else {
+                setRunde(r => r + 1);
+                setFase("arbeid");
+                return WORK_SECS;
+              }
+            }
+            return pre 1;
+          });
+        }, 1000);
+        return stopp;
+      }, [fase]);
+
+      const faseFarge = fase === "klar"   ? "#00C9A7"
+                       : fase === "arbeid" ? "#FF6B35"
+                       : fase === "pause"  ? "#8B8B8B"
+                       : "#00C9A7";
+      const faseLabel = fase === "klar"   ? "KLAR"
+                       : fase === "arbeid" ? "BOKS! 🥊"
+                       : fase === "pause"  ? "PAUSE"
+                       : "FERDIG! 🏆";
+      const minutter = String(Math.floor(sek / 60)).padStart(2, "0");
+      const sekunder = String(sek % 60).padStart(2, "0");
+      const prosent  = fase === "arbeid"
+        ? ((WORK_SECS - sek) / WORK_SECS) * 100
+        : fase === "pause"
+          ? ((REST_SECS - sek) / REST_SECS) * 100
+          : 0;
+
+      return (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 24, marginTop: 24 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 16 }}>
+            SKYGGEBOKSING TIMER · {TOTAL_ROUNDS} RUNDER
+          </div>
+
+          {/\* Progress bar \*/}
+          <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, marginBottom: 24 }}>
+            <div style={{ height: "100%", width: `${prosent}%`, background: faseFarge, borderRadius: 2, transition: "width 1s linear" }} />
+          </div>
+
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: "0.2em", color: faseFarge, marginBottom: 8 }}>
+              {faseLabel}
+            </div>
+            <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 72, fontWeight: 900, color: faseFarge, lineHeight: 1 }}>
+              {minutter}:{sekunder}
+            </div>
+            <div style={{ fontSize: 13, color: "rgba,237,230,0.5)", marginTop: 8 }}>
+              Runde {runde} / {TOTAL_ROUNDS}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            {fase === "klar" && (
+              <button onClick={start} style={{ background: "#FF6B35", border: "none", borderRadius: 8, padding: "12px 32px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: "0.15em", color: "#0d0d1a", cursor: "pointer" }}>
+                START
+              </button>
+            )}
+            {(fase === "arbeid" || fase === "pause") && (
+              <>
+                <button onClick={reset} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "12px 24px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.1em", color: "rgba(240,237,230,0.6)", cursor: "pointer" }}>
+                  RESET
+                </button>
+              </>
+            )}
+            {fase === "ferdig" && (
+              <button onClick={reset} style={{ background: "#00C9A7", border: "none", borderRadius: 8, padding: "12px 32px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: "0.15em", color: "#0d0d1a", cursor: "pointer" }}>
+                IGJEN 🔄
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── CUSTOM TOOLTIP ────────────────────────────────────────────────────
+    function CustomTooltip({ active, payload, label }) {
+      if (!active || !payload || !payload.length) return null;
+      return (
+        <div style={{ background: "#1a1a2e", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 8, padding: "10px 14px" }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "rgba(240,237,230,0.5)", marginBottom: 4 }}>{label}</div>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif, fontSize: 22, fontWeight: 800, color: "#FF6B35" }}>
+            {payload[0].value} kg
+          </div>
+        </div>
+      );
+    }
+
+    // ── MAIN APP ──────────────────────────────────────────────────────────
+    function App() {
+      const [aktivTab, setAktivTab] = useState("vekt");
+      const [aktivØvelse, setAktivØvelse] = useState(null);
+
+      const sisteVektDato = vektData[vektData.length - 1].dato;
+      const yMin = Math.floor(lavest - 1);
+      const yMax = Math.ceil(første + 1);
+
+      const tabs = [
+        { id: "vekt",      label: "VEKT" },
+        { id: "kosthold",  label: "KOSTHOLD" },
+        { id: "styrke",    label: "STYRKE" },
+        { id: "aktive",    label: "AKTIVE DAGER" },
+      ];
+
+      const s = {
+        page:     { maxWidth: 520, margin: "0 auto", padding: "0 0 80px" },
+        header:   { background: "#0d0d1a", padding: "28px 20px 0" },
+        badge:    { display: "inline-block", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.2em", color: "#FF6B35", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 20, padding: "4px 12px", marginBottom: 12 },
+        title:    { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 6 },
+        subtitle: { fontSize: 13, color: "rgba(240,237,230,0.5)", letterSpacing: "0.05em", marginBottom: 20 },
+        statsRow: { display: "flex", gap: 10, marginBottom: 20 },
+        statCard: { flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px" },
+        statNum:  { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 20, color: "#FF6B35" },
+        statLbl:  { fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginTop: 2 },
+        tabBar:   { display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "#0d0d1a", position: "sticky", top: 0, zIndex: 10 },
+        body:     { padding: "20px 20px 0" },
+      };
+
+      return (
+        <div style={s.page}>
+          {/\* HEADER \*/}
+          <div style={s.header}>
+            <div style={s.badge}>● AKTIV PLAN</div>
+            <div style={s.title}>PROSJEKT<br/>OVERSKUDD</div>
+            <div style={s.subtitle}>Vektnedgang · Kjernestyrke · Egenvekt</div>
+            <div style={s.statsRow}>
+              <div style={s.statCard}>
+                <div style={s.statNum}>500 kcal</div>
+                <div style={s.statLbl}>Aktivitetsmål/dag</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.statNum}>150–160g</div>
+                <div style={s.statLbl}>Protein daglig</div>
+              </div>
+              <div style={s.statCard}>
+                <div style={s.statNum}>−400–600</div>
+                <div style={s.statLbl}>kcal Underskudd</div>
+              </div>
+            </div>
+          </div>
+
+          {/\* TAB BAR \*/}
+          <div style={s.tabBar}>
+            {tabs.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setAktivTab(t.id)}
+                style={{
+                  flex: 1, background: "none", border: "none", padding: "14px 4px",
+                  fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.12em",
+                  color: aktivTab === t.id ? "#FF6B35" : "rgba(240,237,230,0.4)",
+                  borderBottom: aktivTab === t.id ? "2px solid #FF6B35" : "2px solid transparent",
+                  cursor: "pointer", transition: "all 0.2s",
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/\* TAB CONTENT \*/}
+          <div style={s.body}>
+
+            {/\* ── VEKT TAB ── \*/}
+            {aktivTab === "vekt" && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#8B8B8B" }} />
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "rgba(240,237,230,0.4)" }}>
+                      Lokale data
+                    </span>
+                  </div>
+                  <button style={{ background: "#FF6B35", border: "none", borderRadius: 8, padding: "8px 18px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: "0.1em", color: "#0d0d1a", cursor: "pointer" }}>
+                    ↻ Oppdater
+                  </button>
+                </div>
+
+                {/\* Stats cards \*/}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+                  {[
+                    { lbl: "START", val: `${første} kg`, sub: "26. feb 2026", farge: "rgba(240,237,230,0.9)" },
+                    { lbl: "NÅ",    val: `${siste} kg`,  sub: sisteVektDato, farge: "#FF6B35" },
+                    { lbl: "LAVESTE", val: `${lavest} kg`, sub: "beste måling", farge: "#00C9A7" },
+                    { lbl: "TOTALT TAP", val: tapVisning, sub: "siden start", farge: tapFarge },
+                  ].map(c => (
+                    <div key={c.lbl} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "18px 16px" }}>
+                      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 8 }}>{c.lbl}</div>
+                      <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 32, color: c.farge }}>{c.val}</div>
+                      <div style={{ fontSize: 12, color: "rgba(240,237,230,0.4)", marginTop: 4 }}>{c.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/\* Chart \*/}
+                <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px 8px 8px" }}>
+                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 16, paddingLeft: 12 }}>
+                    MORGENVEKT — FEB–APR 2026
+                  </div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={vektData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="dato" tick={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fill: "rgba(240,237,230,0.4)" }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[yMin, yMax]} tick={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fill: "rgba(240,237,230,0.4)" }} axisLine={false} tickLine={false} tickFormatter={v => `${v}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <ReferenceLine y={første} stroke="rgba(240,237,230,0.15)" strokeDasharray="4 4" />
+                      <Line type="monotone" dataKey="vekt" stroke="#FF6B35" strokeWidth={2.5} dot={{ r: 4, fill: "#FF6B35", stroke: "#0d0d1a", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/\* ── KOSTHOLD TAB ── \*/}
+            {aktivTab === "kosthold" && (
+              <div>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 20 }}>
+                  ERNÆRINGS-STRATEGI
+                </div>
+                {plan.kosthold.map((item, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20, marginBottom: 12 }}>
+                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 28, lineHeight: 1.2 }}>{item.ikon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 6 }}>{item.tittel}</div>
+                        <div style={{ fontSize: 14, color: "rgba(240,237,230,0.85)", lineHeight: 1.5 }}>{item.info}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/\* ── STYRKE TAB ── \*/}
+            {aktivTab === "styrke" && (
+              <div>
+                <div style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: "0.05em", marginBottom: 4 }}>
+                    {plan.styrke.dager}
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(240,237,230,0.5)" }}>
+                    📍 {plan.styrke.sted}
+                  </div>
+                </div>
+
+                {plan.styrke.øvelser.map((ø, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setAktivØvelse(aktivØvelse === i ? null : i)}
+                    style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${ø.farge + "55"}`, borderRadius: 14, padding: 16, marginBottom: 10, cursor: "pointer", transition: "all 0.2s" }}
+                  >
+                    <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                
+                      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 500, color: ø.farge, minWidth: 28 }}>{ø.nr}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "0.02em" }}>{ø.navn}</div>
+                        <div style={{ fontSize: 12, color: "rgba(240,237,230,0.4)", marginTop: 2 }}>{ø.kategori}</div>
+                      </div>
+                      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "rgba(240,237,230,0.5)", textAlign: "right" }}>{ø.sett}</div>
+                    </div>
+                    {aktivØvelse === i && (
+                      <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        <p style={{ fontSize: 13, color: "rgba(240,237,230,0.75)", lineHeight: 1.6 }}>{ø.instruksjon}</p>
+                        {ø.tips && (
+                          <p style={{ fontSize: 12, color: "rgba(240,237,230,0.45)", marginTop: 10, fontStyle: "italic", lineHeight: 1.5 }}>💡 {ø.tips}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/\* ── AKTIVE DAGER TAB ── \*/}
+            {aktivTab === "aktive" && (
+              <div>
+                <div style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: "0.05em" }}>
+                    {plan.hvile.dager}
+                  </div>
+                </div>
+
+                {plan.hvile.struktur.map((s, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 20, marginBottom: 12 }}>
+                    <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                      <span style={{ fontSize: 32, lineHeight: 1 }}>{s.ikon}</span>
+                      <div style={{ fontSize: 14, color: "rgba(240,237,230,0.85)", lineHeight: 1.5 }}>{s.tekst}</div>
+                    </div>
+                  </div>
+                ))}
+
+                <BoxeTimer />
+              </div>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
