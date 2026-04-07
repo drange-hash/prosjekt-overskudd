@@ -164,7 +164,7 @@
             SKYGGEBOKSING TIMER · {TOTAL_ROUNDS} RUNDER
           </div>
 
-          {/\* Progress bar \*/}
+          {/* Progress bar */}
           <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, marginBottom: 24 }}>
             <div style={{ height: "100%", width: `${prosent}%`, background: faseFarge, borderRadius: 2, transition: "width 1s linear" }} />
           </div>
@@ -176,7 +176,7 @@
             <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 72, fontWeight: 900, color: faseFarge, lineHeight: 1 }}>
               {minutter}:{sekunder}
             </div>
-            <div style={{ fontSize: 13, color: "rgba,237,230,0.5)", marginTop: 8 }}>
+            <div style={{ fontSize: 13, color: "rgba(240,237,230,0.5)", marginTop: 8 }}>
               Runde {runde} / {TOTAL_ROUNDS}
             </div>
           </div>
@@ -210,7 +210,7 @@
       return (
         <div style={{ background: "#1a1a2e", border: "1px solid rgba(255,107,53,0.3)", borderRadius: 8, padding: "10px 14px" }}>
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "rgba(240,237,230,0.5)", marginBottom: 4 }}>{label}</div>
-          <div style={{ fontFamily: "'Barlow Condensed', sans-serif, fontSize: 22, fontWeight: 800, color: "#FF6B35" }}>
+          <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 22, fontWeight: 800, color: "#FF6B35" }}>
             {payload[0].value} kg
           </div>
         </div>
@@ -249,7 +249,7 @@
 
       return (
         <div style={s.page}>
-          {/\* HEADER \*/}
+          {/* HEADER */}
           <div style={s.header}>
             <div style={s.badge}>● AKTIV PLAN</div>
             <div style={s.title}>PROSJEKT<br/>OVERSKUDD</div>
@@ -270,7 +270,7 @@
             </div>
           </div>
 
-          {/\* TAB BAR \*/}
+          {/* TAB BAR */}
           <div style={s.tabBar}>
             {tabs.map(t => (
               <button
@@ -289,10 +289,10 @@
             ))}
           </div>
 
-          {/\* TAB CONTENT \*/}
+          {/* TAB CONTENT */}
           <div style={s.body}>
 
-            {/\* ── VEKT TAB ── \*/}
+            {/* ── VEKT TAB ── */}
             {aktivTab === "vekt" && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
@@ -307,7 +307,7 @@
                   </button>
                 </div>
 
-                {/\* Stats cards \*/}
+                {/* Stats cards */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
                   {[
                     { lbl: "START", val: `${første} kg`, sub: "26. feb 2026", farge: "rgba(240,237,230,0.9)" },
@@ -323,7 +323,7 @@
                   ))}
                 </div>
 
-                {/\* Chart \*/}
+                {/* Chart */}
                 <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px 8px 8px" }}>
                   <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 16, paddingLeft: 12 }}>
                     MORGENVEKT — FEB–APR 2026
@@ -342,7 +342,7 @@
               </div>
             )}
 
-            {/\* ── KOSTHOLD TAB ── \*/}
+            {/* ── KOSTHOLD TAB ── */}
             {aktivTab === "kosthold" && (
               <div>
                 <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.15em", color: "rgba(240,237,230,0.4)", marginBottom: 20 }}>
@@ -362,7 +362,7 @@
               </div>
             )}
 
-            {/\* ── STYRKE TAB ── \*/}
+            {/* ── STYRKE TAB ── */}
             {aktivTab === "styrke" && (
               <div>
                 <div style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
@@ -378,10 +378,9 @@
                   <div
                     key={i}
                     onClick={() => setAktivØvelse(aktivØvelse === i ? null : i)}
-                    style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${ø.farge + "55"}`, borderRadius: 14, padding: 16, marginBottom: 10, cursor: "pointer", transition: "all 0.2s" }}
+                    style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${ø.farge === "#FF6B35" && aktivØvelse === i ? ø.farge + "55" : aktivØvelse === i ? ø.farge + "55" : "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: 16, marginBottom: 10, cursor: "pointer", transition: "all 0.2s" }}
                   >
                     <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                
                       <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 500, color: ø.farge, minWidth: 28 }}>{ø.nr}</div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "0.02em" }}>{ø.navn}</div>
@@ -402,7 +401,7 @@
               </div>
             )}
 
-            {/\* ── AKTIVE DAGER TAB ── \*/}
+            {/* ── AKTIVE DAGER TAB ── */}
             {aktivTab === "aktive" && (
               <div>
                 <div style={{ background: "rgba(255,107,53,0.08)", border: "1px solid rgba(255,107,53,0.2)", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
