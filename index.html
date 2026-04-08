@@ -156,7 +156,7 @@ function lagGraf(data) {
 // --- Timer komponent ---
 function lagTimer(id, sekunder, label, farge) {
   return `
-  <div id="timer-${id}" style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:16px;">
+  <div id="timer-${id}" onclick="event.stopPropagation()" style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:16px;">
     <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
       <svg width="80" height="80" style="transform:rotate(-90deg)">
         <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
@@ -197,7 +197,7 @@ function startTimer(id, total, farge) {
     ring.style.strokeDashoffset = C * (1 - s/total);
   }
 
-  btn.innerHTML = `<button onclick="stoppTimer('${id}')" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;color:rgba(240,237,230,0.5);">AVBRYT</button>`;
+  btn.innerHTML = `<button onclick="stoppTimer('${id}',${total},'${farge}')" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;color:rgba(240,237,230,0.5);">AVBRYT</button>`;
   vis(sek);
 
   timerState[id] = { interval: setInterval(() => {
@@ -214,9 +214,15 @@ function startTimer(id, total, farge) {
   }, 1000) };
 }
 
-function stoppTimer(id) {
+function stoppTimer(id, total, farge) {
   if (timerState[id]) clearInterval(timerState[id].interval);
-  render();
+  const ring = document.getElementById(`ring-${id}`);
+  const display = document.getElementById(`display-${id}`);
+  const btn = document.getElementById(`btn-${id}`);
+  const C = 2 * Math.PI * 34;
+  if (ring) { ring.style.strokeDashoffset = 0; ring.style.stroke = farge; }
+  if (display) { display.textContent = total >= 60 ? `${Math.floor(total/60)}:00` : String(total); display.style.color = "#F0EDE6"; display.style.fontSize = "22px"; }
+  if (btn) btn.innerHTML = `<button onclick="startTimer('${id}',${total},'${farge}')" style="background:${farge};border:none;border-radius:8px;padding:8px 20px;font-weight:800;font-size:14px;color:#0A0A0F;">START</button>`;
 }
 
 // --- Boks-timer ---
