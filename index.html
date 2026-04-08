@@ -96,9 +96,21 @@ function parseAppsScriptData(rows) {
     .map(d => ({ dato: d.datoLabel, vekt: d.beste, kilde: "sheets" }));
 }
 
+// --- Last inn cache fra forrige besøk ---
+const CACHE_KEY = "prosjekt_overskudd_vekt";
+try {
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (parsed.length > 0) {
+      vektData = parsed;
+      status = "live";
+    }
+  }
+} catch(e) {}
+
 async function hentData() {
-  status = "laster";
-  render();
+  if (status !== "live") { status = "laster"; render(); }
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     if (!res.ok) throw new Error();
@@ -108,6 +120,7 @@ async function hentData() {
     vektData = [...manuelleData, ...sheetsData];
     sisteOppdatering = new Date().toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
     status = "live";
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(vektData)); } catch(e) {}
   } catch(e) {
     console.error("Fetch feil:", e);
     status = "feil";
