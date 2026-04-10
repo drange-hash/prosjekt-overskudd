@@ -42,14 +42,14 @@ const plan = {
   ],
   øvelser: [
     { nr: "01", navn: "EKSENTRISKE ARMHEVINGER", kategori: "Oppvarming / Styrke", sett: "2 sett × 5 reps", instruksjon: "Senk deg så sakte du klarer (3–5 sek). Hold kroppen stiv som en planke – ta med rumpa ned!", tips: "Bruk knærne eller sofakanten for bedre kontroll.", farge: "#FF6B35" },
-    { nr: "02", navn: "DIPS MOT SOFA", kategori: "Triceps / Overkropp", sett: "4 sett × 12 reps", instruksjon: "90° i albuen, hold ryggen nær kanten. Bøyde knær for kontroll – press kraftig opp.", farge: "#FF6B35" },
+    { nr: "02", navn: "DIPS MOT SOFA", kategori: "Triceps / Overkropp", sett: "4 sett × 12 reps", instruksjon: "90° i albuen, hold ryggen nær kanten. Bøyde knær for kontroll – press kraftig opp.", farge: "#00C9A7" },
     { nr: "03", navn: "TRX-ROING", kategori: "Rygg / Trekk", sett: "4 sett × 12 reps", instruksjon: "Fest TRX-stropen over en lukket dør. Hold i håndtakene, len deg bakover – dra deg opp ved å trekke albuene bakover.", tips: "Utstyr: TRX-stropen (svart/oransje).", farge: "#00C9A7" },
     { nr: "04", navn: "KNEBØY", kategori: "Bein / Sete", sett: "3 sett × 10 reps", instruksjon: "Rett rygg, tyngden på hælene.", tips: "Sjekk at vekten er jevnt fordelt på begge hæler.", farge: "#FF6B35" },
     { nr: "05", navn: "SETELØFT / GLUTE BRIDGE", kategori: "Sete / Kjerne", sett: "3 sett × 12 reps", instruksjon: "Ligg på ryggen, løft hoftene, skvis rumpa på toppen.", tips: "Skvis begge sider av rompa likt – ikke len deg til én side.", farge: "#FF6B35" },
-    { nr: "05b", navn: "CLAMSHELL", kategori: "Sete / Hofte — NY", sett: "3 sett × 15 reps (per side)", instruksjon: "Legg deg på siden med knærne bøyd ca. 45 grader. Hold føttene presset sammen. Løft det øverste kneet opp – hoften skal ikke bevege seg.", tips: "Utstyr: gul loop-strikk rundt lårene.", farge: "#00C9A7", ny: true },
-    { nr: "06", navn: "FUGLEHUNDEN", kategori: "Kjerne / Stabilitet", sett: "4 sett × 12 reps", instruksjon: "Diagonalt løft av arm og bein. Hold ryggen nøytral.", farge: "#FF6B35" },
-    { nr: "07", navn: "DEAD BUG", kategori: "Dyp kjerne", sett: "3 sett × 8 reps (per side)", instruksjon: "Ligg på ryggen, armer rett opp. Senk motsatt arm og bein mot gulvet – hold korsryggen presset ned.", farge: "#00C9A7" },
-    { nr: "08", navn: "PLANKE", kategori: "Kjerne", sett: "3 sett × 25 sek hold", instruksjon: "Underarmene i gulvet, kroppen rett linje fra hode til hæl. Ikke la hoftene synke.", tips: "Øk holdetiden gradvis, 5 sek per uke.", farge: "#00C9A7", planke: true },
+    { nr: "05b", navn: "CLAMSHELL", kategori: "Sete / Hofte", sett: "3 sett × 15 reps (per side)", instruksjon: "Legg deg på siden med knærne bøyd ca. 45 grader. Hold føttene presset sammen. Løft det øverste kneet opp – hoften skal ikke bevege seg.", tips: "Utstyr: gul loop-strikk rundt lårene.", farge: "#FF6B35" },
+    { nr: "06", navn: "FUGLEHUNDEN", kategori: "Kjerne / Stabilitet", sett: "4 sett × 12 reps", instruksjon: "Diagonalt løft av arm og bein. Hold ryggen nøytral.", farge: "#00C9A7" },
+    { nr: "07", navn: "DEAD BUG", kategori: "Dyp kjerne", sett: "3 sett × 8 reps (per side)", instruksjon: "Ligg på ryggen, armer rett opp. Senk motsatt arm og bein mot gulvet – hold korsryggen presset ned.", farge: "#FF6B35" },
+    { nr: "08", navn: "PLANKE", kategori: "Kjerne", sett: "2 sett × 25 sek hold", instruksjon: "Underarmene i gulvet, kroppen rett linje fra hode til hæl. Ikke la hoftene synke.", tips: "Øk holdetiden gradvis, 5 sek per uke.", farge: "#FF6B35", planke: true },
     { nr: "09", navn: "KOBRAEN", kategori: "Restitusjon / Strekk", sett: "2 minutter", instruksjon: "Ligg på magen, press overkroppen opp. Kjenn strekken i mage og rygg.", farge: "#8B8B8B", kobra: true },
   ],
   hvile: [
@@ -396,7 +396,6 @@ function render() {
             <div style="flex:1;">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                 <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:0.04em;color:#F0EDE6;">${ø.navn}</span>
-                ${ø.ny ? `<span style="background:#00C9A7;color:#0A0A0F;font-size:9px;font-weight:800;font-family:'DM Mono',monospace;letter-spacing:0.1em;padding:2px 6px;border-radius:4px;">NY</span>` : ""}
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
                 <span style="font-size:11px;color:rgba(240,237,230,0.45);font-family:'DM Mono',monospace;">${ø.kategori}</span>
