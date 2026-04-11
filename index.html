@@ -128,7 +128,8 @@ async function loggTrening() {
     setTimeout(() => { if (btn) { btn.textContent = "📅 Logg treningsøkt"; btn.disabled = false; } }, 3000);
   }
 }
-  if (status !== "live") { status = "laster"; render(); }
+
+async function hentData() {
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     if (!res.ok) throw new Error();
