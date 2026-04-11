@@ -23,7 +23,7 @@
 <body>
 <div id="app"></div>
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFRc3blq_XbPrj3UzbFVu027f3S1aTBH6hfEieWgrhuYfNX7SrKAutw3XCWkj7ABOOaQ/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQVcGlBpRf1GVoMbIe_IRVeCEUvRU6fPUO4yZbvGvwhGMlMqsigPaDnANd7l8jigsiDA/exec";
 
 const manuelleData = [
   { dato: "26/2", vekt: 130.1, kilde: "manuell" },
@@ -113,11 +113,7 @@ async function loggTrening() {
   const btn = document.getElementById("logg-btn");
   if (btn) { btn.textContent = "Logger…"; btn.disabled = true; }
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "action=loggTrening"
-    });
+    const res = await fetch(APPS_SCRIPT_URL + "?action=loggTrening");
     const tekst = await res.text();
     if (tekst.trim() === "OK") {
       if (btn) { btn.textContent = "✅ Logget!"; btn.style.background = "#00C9A7"; btn.style.color = "#0A0A0F"; }
