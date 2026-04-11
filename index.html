@@ -6,6 +6,10 @@
   <title>Prosjekt Overskudd</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#FF6B35" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Overskudd" />
+  <link rel="apple-touch-icon" href="icon.svg" />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,6 +26,15 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="install-banner" class="hidden" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;background:#1A1A22;border:1px solid rgba(255,107,53,0.35);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);white-space:nowrap;">
+  <img src="icon.svg" width="36" height="36" style="border-radius:8px;flex-shrink:0;" />
+  <div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#F0EDE6;">Installer på hjemskjerm</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(240,237,230,0.45);margin-top:1px;">Fungerer offline · Raskere oppstart</div>
+  </div>
+  <button onclick="installApp()" style="background:#FF6B35;border:none;border-radius:10px;padding:9px 18px;font-weight:800;font-size:13px;color:#0A0A0F;flex-shrink:0;">Installer</button>
+  <button onclick="document.getElementById('install-banner').classList.add('hidden')" style="background:none;border:none;padding:4px 6px;color:rgba(240,237,230,0.35);font-size:18px;line-height:1;flex-shrink:0;">✕</button>
+</div>
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQVcGlBpRf1GVoMbIe_IRVeCEUvRU6fPUO4yZbvGvwhGMlMqsigPaDnANd7l8jigsiDA/exec";
 
@@ -497,6 +510,32 @@ function toggleOvelse(i) {
 
 // Start
 hentData();
+
+// --- Service Worker ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/prosjekt-overskudd/sw.js');
+}
+
+// --- Install prompt ---
+let installEvent = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installEvent = e;
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.classList.add('hidden');
+  installEvent = null;
+});
+
+function installApp() {
+  if (!installEvent) return;
+  installEvent.prompt();
+  installEvent.userChoice.then(() => { installEvent = null; });
+}
 </script>
 </body>
 </html>

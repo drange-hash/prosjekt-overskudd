@@ -1,15 +1,19 @@
 {
   "name": "Prosjekt Overskudd",
   "short_name": "Overskudd",
+  "description": "Trenings- og vektnedgangsoppfølging",
   "start_url": "/prosjekt-overskudd/",
+  "scope": "/prosjekt-overskudd/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0A0A0F",
   "theme_color": "#FF6B35",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/FF6B35/0A0A0F?text=PO",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
