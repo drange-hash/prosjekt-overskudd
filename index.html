@@ -23,7 +23,7 @@
 <body>
 <div id="app"></div>
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXSAbmAkhE1bq4bz5LbB3FqjMwOICnhkLgz-VviLbvUmIjRzPTFKV1ELP-kQ4lKnExYg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFRc3blq_XbPrj3UzbFVu027f3S1aTBH6hfEieWgrhuYfNX7SrKAutw3XCWkj7ABOOaQ/exec";
 
 const manuelleData = [
   { dato: "26/2", vekt: 130.1, kilde: "manuell" },
@@ -109,7 +109,25 @@ try {
   }
 } catch(e) {}
 
-async function hentData() {
+async function loggTrening() {
+  const btn = document.getElementById("logg-btn");
+  if (btn) { btn.textContent = "Logger…"; btn.disabled = true; }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "action=loggTrening"
+    });
+    const tekst = await res.text();
+    if (tekst.trim() === "OK") {
+      if (btn) { btn.textContent = "✅ Logget!"; btn.style.background = "#00C9A7"; btn.style.color = "#0A0A0F"; }
+      setTimeout(() => { if (btn) { btn.textContent = "📅 Logg treningsøkt"; btn.style.background = "rgba(255,107,53,0.1)"; btn.style.color = "#FF6B35"; btn.disabled = false; } }, 3000);
+    } else throw new Error();
+  } catch {
+    if (btn) { btn.textContent = "❌ Feil – prøv igjen"; btn.disabled = false; }
+    setTimeout(() => { if (btn) { btn.textContent = "📅 Logg treningsøkt"; btn.disabled = false; } }, 3000);
+  }
+}
   if (status !== "live") { status = "laster"; render(); }
   try {
     const res = await fetch(APPS_SCRIPT_URL);
@@ -412,6 +430,9 @@ function render() {
           </div>
         </div>`).join("")}
       <p style="font-size:11px;color:rgba(240,237,230,0.3);font-family:'DM Mono',monospace;margin-top:12px;text-align:center;">Trykk på en øvelse for instruksjon</p>
+      <div style="margin-top:20px;text-align:center;">
+        <button id="logg-btn" onclick="loggTrening()" style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:12px;padding:14px 28px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#FF6B35;width:100%;cursor:pointer;">📅 Logg treningsøkt</button>
+      </div>
     </div>`;
 
   const hvileFane = `
