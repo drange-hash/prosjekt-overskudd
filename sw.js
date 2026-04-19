@@ -1,4 +1,4 @@
-const CACHE = 'overskudd-v1';
+const CACHE = 'overskudd-v2';
 
 const APP_SHELL = [
   '/prosjekt-overskudd/',
@@ -49,7 +49,27 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App shell — cache first, fall back til nettverk og oppdater cache
+  // HTML / navigasjon — network-first så nye versjoner vises umiddelbart,
+  // fall tilbake til cache hvis offline
+  const erHTML = e.request.mode === 'navigate' ||
+                 (e.request.destination === 'document') ||
+                 url.pathname.endsWith('/') ||
+                 url.pathname.endsWith('.html');
+
+  if (erHTML) {
+    e.respondWith(
+      fetch(e.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Alt annet (ikon, manifest) — cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
