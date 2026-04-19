@@ -26,6 +26,7 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="settings-panel" class="hidden" style="position:fixed;inset:0;z-index:1000;background:#0A0A0F;overflow-y:auto;"></div>
 <div id="install-banner" class="hidden" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;background:#1A1A22;border:1px solid rgba(255,107,53,0.35);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);white-space:nowrap;">
   <img src="icon.svg" width="36" height="36" style="border-radius:8px;flex-shrink:0;" />
   <div>
@@ -77,6 +78,49 @@ let vektData = [...manuelleData];
 let status = "laster";
 let sisteOppdatering = null;
 let aktivFane = "vekt";
+
+// --- Innstillinger ---
+const SETTINGS_KEY = 'prosjekt_overskudd_settings';
+let settingsData = {};
+try {
+  const s = localStorage.getItem(SETTINGS_KEY);
+  if (s) settingsData = JSON.parse(s);
+} catch(e) {}
+
+function parseSett(str) {
+  const m = str.match(/^(\d+)\s+sett\s+[×x]\s+(.+)/);
+  if (m) return { antall: parseInt(m[1]), reps: m[2] };
+  return { antall: null, reps: str };
+}
+
+function visSett(nr, defaultStr) {
+  const c = settingsData[nr];
+  if (!c) return defaultStr;
+  const parsed = parseSett(defaultStr);
+  if (parsed.antall != null && c.antall != null) return `${c.antall} sett × ${c.reps || parsed.reps}`;
+  return c.reps || defaultStr;
+}
+
+// --- Lyd ---
+function spillDing(frekvens = 880, varighet = 0.7) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frekvens, ctx.currentTime);
+    gain.gain.setValueAtTime(0.45, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + varighet);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + varighet);
+  } catch(e) {}
+}
+
+function spillSeier() {
+  [880, 1100, 1320].forEach((f, i) => setTimeout(() => spillDing(f, 0.55), i * 220));
+}
 
 // --- Utils ---
 function parseAppsScriptData(rows) {
@@ -246,6 +290,7 @@ function startTimer(id, total, farge) {
     vis(sek);
     if (sek <= 0) {
       clearInterval(timerState[id].interval);
+      spillDing();
       display.textContent = "✓";
       display.style.color = "#00C9A7";
       display.style.fontSize = "28px";
@@ -290,14 +335,17 @@ function tickBoks() {
       if (boksState.runde >= 3) {
         boksState.fase = "ferdig";
         clearInterval(boksInterval);
+        spillSeier();
       } else {
         boksState.fase = "pause";
         boksState.sek = 60;
+        spillDing(660, 0.6);
       }
     } else if (boksState.fase === "pause") {
       boksState.runde++;
       boksState.fase = "arbeid";
       boksState.sek = 180;
+      spillDing(880, 0.5);
     }
   }
   renderBoksTimer();
@@ -427,7 +475,7 @@ function render() {
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
                 <span style="font-size:11px;color:rgba(240,237,230,0.45);font-family:'DM Mono',monospace;">${ø.kategori}</span>
-                <span style="font-size:12px;color:${ø.farge};font-weight:600;font-family:'Barlow Condensed',sans-serif;">${ø.sett}</span>
+                <span style="font-size:12px;color:${ø.farge};font-weight:600;font-family:'Barlow Condensed',sans-serif;">${visSett(ø.nr, ø.sett)}</span>
               </div>
             </div>
             <svg id="chevron-${i}" width="16" height="16" viewBox="0 0 16 16" fill="none" style="transition:transform 0.3s ease;opacity:0.6;flex-shrink:0;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -475,7 +523,8 @@ function render() {
 
   document.getElementById("app").innerHTML = `
     <div style="min-height:100vh;background:#0A0A0F;background-image:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,107,53,0.12) 0%, transparent 60%);padding-bottom:48px;">
-      <div style="padding:32px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="padding:32px 24px 24px;border-bottom:1px solid rgba(255,255,255,0.06);position:relative;">
+        <button onclick="åpneInnstillinger()" style="position:absolute;top:28px;right:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;width:40px;height:40px;font-size:18px;color:rgba(240,237,230,0.5);display:flex;align-items:center;justify-content:center;padding:0;">⚙</button>
         <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;color:#FF6B35;margin-bottom:6px;animation:pulse 3s ease infinite;">● AKTIV PLAN</div>
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;letter-spacing:0.04em;line-height:1;color:#F0EDE6;">PROSJEKT<br/>OVERSKUDD</h1>
         <p style="margin-top:8px;font-size:13px;color:rgba(240,237,230,0.5);font-family:'DM Mono',monospace;">Vektnedgang · Kjernestyrke · Egenvekt</p>
@@ -510,6 +559,93 @@ function toggleOvelse(i) {
 
 // Start
 hentData();
+
+// --- Innstillinger-panel ---
+function åpneInnstillinger() {
+  const panel = document.getElementById('settings-panel');
+  renderSettingsPanel();
+  panel.classList.remove('hidden');
+}
+
+function renderSettingsPanel() {
+  const panel = document.getElementById('settings-panel');
+  const øvelserHTML = plan.øvelser.map(ø => {
+    const parsed = parseSett(ø.sett);
+    const custom = settingsData[ø.nr] || {};
+    const antall = custom.antall != null ? custom.antall : (parsed.antall ?? '');
+    const reps   = custom.reps   != null ? custom.reps   : parsed.reps;
+    const harSett = parsed.antall != null;
+    return `
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:${ø.farge};opacity:0.8;min-width:28px;">${ø.nr}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#F0EDE6;">${ø.navn}</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          ${harSett ? `
+          <div style="width:72px;">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(240,237,230,0.35);margin-bottom:6px;">SETT</div>
+            <input id="sett-${ø.nr}" type="number" min="1" max="20" value="${antall}"
+              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:#F0EDE6;text-align:center;"/>
+          </div>` : ''}
+          <div style="flex:1;">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(240,237,230,0.35);margin-bottom:6px;">${harSett ? 'REPS / VARIGHET' : 'VARIGHET'}</div>
+            <input id="reps-${ø.nr}" type="text" value="${reps}"
+              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:9px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;color:#F0EDE6;"/>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="max-width:480px;margin:0 auto;padding:0 0 48px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:32px 24px 20px;position:sticky;top:0;background:#0A0A0F;border-bottom:1px solid rgba(255,255,255,0.06);z-index:10;">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;color:rgba(240,237,230,0.35);margin-bottom:4px;">KONFIGURASJON</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:#F0EDE6;">INNSTILLINGER</div>
+        </div>
+        <button onclick="document.getElementById('settings-panel').classList.add('hidden')"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;width:40px;height:40px;font-size:20px;color:rgba(240,237,230,0.5);">✕</button>
+      </div>
+      <div style="padding:20px 24px 0;">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;color:rgba(240,237,230,0.35);margin-bottom:14px;">SETT OG REPS PER ØVELSE</div>
+        ${øvelserHTML}
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          <button onclick="lagreSettings()"
+            style="flex:1;background:#FF6B35;border:none;border-radius:12px;padding:14px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:#0A0A0F;">
+            Lagre endringer
+          </button>
+          <button onclick="nullstillSettings()"
+            style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 18px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:rgba(240,237,230,0.45);">
+            Nullstill
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function lagreSettings() {
+  plan.øvelser.forEach(ø => {
+    const settEl = document.getElementById(`sett-${ø.nr}`);
+    const repsEl = document.getElementById(`reps-${ø.nr}`);
+    const parsed = parseSett(ø.sett);
+    const antall = settEl ? parseInt(settEl.value) : null;
+    const reps   = repsEl ? repsEl.value.trim() : null;
+    if (reps) {
+      settingsData[ø.nr] = { antall: (!isNaN(antall) && antall > 0) ? antall : parsed.antall, reps };
+    }
+  });
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settingsData));
+  document.getElementById('settings-panel').classList.add('hidden');
+  render();
+}
+
+function nullstillSettings() {
+  settingsData = {};
+  localStorage.removeItem(SETTINGS_KEY);
+  document.getElementById('settings-panel').classList.add('hidden');
+  render();
+}
 
 // --- Service Worker ---
 if ('serviceWorker' in navigator) {
